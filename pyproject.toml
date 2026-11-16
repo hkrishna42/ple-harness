@@ -1,0 +1,35 @@
+[project]
+name = "ple-harness"
+version = "0.0.0"
+description = "Agent harness for the PLE competition. Build-time project file; the entry installs requirements.txt."
+requires-python = ">=3.12,<3.13"
+license = "Apache-2.0"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# ponytail: vendored plan-verify sample stays unlinted until Phase 2 moves the loop into harness/.
+extend-exclude = ["serve.py", "taskbridge.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "PLW1510"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.1",
+    "pytest>=9.2.0",
+    "pyyaml>=6.0.3",
+    "ruff>=0.17.5",
+    "types-pyyaml>=6.0.12.20261113",
+]
