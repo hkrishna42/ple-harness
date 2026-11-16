@@ -77,3 +77,5 @@ The kit lives next to this repo, never inside it: <https://github.com/google-res
 - Tools: explicit, boring, with the formula's source in a comment. Cleverness is a defect there.
 - Run-time skills: short, one job each, a one-line description that says when to load it.
 - Commit messages: `area: what` (for example `cost(engine): add cache breakpoints with tests`).
+- Commits and PRs are Hari's: no `Co-Authored-By` trailer, no "Generated with" line. Older plans
+  that ask for one are superseded; `.claude/settings.json` turns Claude Code's attribution off.
