@@ -9,7 +9,7 @@ UV := uv run --frozen
 check: kit
 	$(UV) ruff check .
 	$(UV) ruff format --check .
-	$(UV) mypy --strict harness cost
+	$(UV) mypy --strict harness cost .claude/hooks/guard.py
 	PLE_KIT_DIR=$(KIT) $(UV) pytest -q
 	cd $(KIT) && uv run --quiet python -m kit validate $(CURDIR)
 	@mkdir -p .claude/state && touch .claude/state/tests-ran
