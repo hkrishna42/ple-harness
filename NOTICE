@@ -5,8 +5,9 @@ Licensed under the Apache License, Version 2.0. See LICENSE.
 
 This product includes software from the Physical-Engineering's Last Exam kit
 (https://github.com/google-research/ple), Copyright 2026 Google LLC, licensed under
-the Apache License, Version 2.0. serve.py, taskbridge.py and requirements.txt start
-from sample_submissions/plan-verify at commit 8320f0402fdca9f42476607f72bcfd5271cd50c9.
+the Apache License, Version 2.0. serve.py, taskbridge.py, requirements.txt and
+submission.yaml start from sample_submissions/plan-verify at commit
+8320f0402fdca9f42476607f72bcfd5271cd50c9.
 The key pattern in .claude/hooks/guard.py follows KEY_RE in the kit's kit/check.py.
 
 Build-time workflow text may adapt material from these MIT-licensed projects:
