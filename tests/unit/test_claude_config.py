@@ -87,3 +87,9 @@ def test_skills_have_matching_frontmatter() -> None:
 def test_templates_exist() -> None:
     assert (ROOT / "docs" / "handover" / "TEMPLATE.md").is_file()
     assert (ROOT / "docs" / "adr" / "0000-template.md").is_file()
+
+
+def test_ci_runs_make_check() -> None:
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "check.yml").read_text())
+    steps = workflow["jobs"]["check"]["steps"]
+    assert any(step.get("run") == "make check" for step in steps)
