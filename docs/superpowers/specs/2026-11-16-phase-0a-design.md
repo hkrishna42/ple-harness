@@ -146,21 +146,31 @@ The hook gathers the text it inspects from `tool_input`: `file_path`, `path`,
      `task_cards` is always denied. The cache root and task roots are denied because
      a recursive read from there reaches `tests/`;
    - `runs/` followed by `verifier`;
-   - `ple/runs/` (the kit clone's run output).
+   - `ple/runs/` (the kit clone's run output);
+   - the bare cache root (`.cache/plebench` or `.cache/plebench/` at the end of a path
+     token). Other plebench subfolders, such as the kit's `~/.cache/plebench/<name>/`
+     logs, stay readable.
+
+   For Grep and Glob it also resolves the `path` input (expanding `~`, relative to the
+   project root) and denies it when it equals or sits above the task cache
+   (`~/.cache/plebench/tasks`) or the kit's `runs/`. The kit is `$PLE_KIT_DIR`, else
+   `ple` beside the main checkout (the Makefile's rule, falling back to
+   `<project root>/../ple`). Accepted residual risk: Bash commands that `cd` into the
+   kit and use relative paths, or recurse from `~/.cache`.
 
    It never matches this repository's own `tests/`. It is a guardrail for honest
    agents, not a sandbox (`ponytail:` comment: a Docker or OS sandbox is the upgrade).
 2. **Artifacts.** Denies Write, Edit, MultiEdit and NotebookEdit under
-   `<repo>/artifacts/`. Also denies Bash commands that mention `artifacts/` and
+   an `artifacts/` folder whose parent holds a `submission.yaml` (so worktrees are
+   covered). Also denies Bash commands that mention `artifacts/` and
    contain a write verb (`>`, `tee`, `rm`, `mv`, `cp`, `sed -i`, `touch`, `mkdir`),
    unless the command runs `eval/run.py` or `kit artifacts`.
 3. **Force push.** Denies `git push` with `--force`, `--force-with-lease`, a short
    flag cluster containing `f`, or a `+ref` refspec.
-4. **Secrets.** Denies text matching any of: `sk-ant-` plus 20 or more key
-   characters; `sk-` plus 32 or more alphanumerics; `hf_` plus 30 or more
-   alphanumerics; `AIza` plus 35 characters; `gh[pousr]_` plus 36 or more;
-   `github_pat_` plus 40 or more; `AKIA` plus 16 uppercase alphanumerics;
-   `-----BEGIN ... PRIVATE KEY-----`; `xox[abpr]-` plus 10 or more.
+4. **Secrets.** Denies text shaped like the kit's `KEY_RE`: a prefix (`sk-`, `sk-ant-`,
+   `sk-proj-`, `AIza`, `gh[pousr]_`, `github_pat_`, `hf_`, `xox[baprs]-`) followed by 20 or
+   more key characters that mix upper case, lower case and digits; a PEM private-key
+   header; or `AKIA` plus 16 uppercase alphanumerics.
 5. **Errors.** An exception inside the PreToolUse handler denies the call, with the
    exception text in the reason. A guard bug shows up immediately rather than
    letting a call through silently.
@@ -175,7 +185,8 @@ ignores formatter failures.
 
 On `source` `startup`, `resume` or `clear`, it writes
 `.claude/state/session-<session_id>.json` with the start time, `HEAD`, and a SHA-256
-of `git status --porcelain`. On `compact` it keeps the existing file, so the gate's
+fingerprint of the working tree (`git status --porcelain -uall`, `git diff HEAD --binary`
+and the bytes of each untracked file). On `compact` it keeps the existing file, so the gate's
 start time survives compaction. It prints nothing.
 
 ### 4.4 Stop gate
@@ -184,13 +195,18 @@ Checks run in this order:
 
 1. If `PLE_STOP_GATE=off` is set, the session may stop.
 2. If no session file exists, the session may stop, with a warning on stderr.
-3. If `HEAD` and the status hash both equal their start values, the session changed
+3. If `HEAD` and the fingerprint both equal their start values, the session changed
    nothing and may stop.
 4. Otherwise it needs both of these to be newer than the start time:
    `.claude/state/tests-ran` (written by `make check` on success) and
    `docs/handover/LATEST.md`. If either is missing or stale, the hook returns
    `{"decision": "block", "reason": ...}` naming what to do.
-5. An exception anywhere in the Stop handler lets the session stop, with a warning on
+5. When the Stop payload has `stop_hook_active: true` (the agent was already blocked
+   once), only a fresh `LATEST.md` is required. If it is fresh but `tests-ran` is stale,
+   the session may stop, with a warning on stderr naming the stale marker; a stale
+   `LATEST.md` still blocks. The handover must record the `make check` result, so a
+   failing check never traps the session.
+6. An exception anywhere in the Stop handler lets the session stop, with a warning on
    stderr. A gate bug must never trap a finished session.
 
 Subagents trigger `SubagentStop`, which is not registered, so subagents are not gated.
@@ -208,7 +224,7 @@ values, for builder-facing output).
 | `harness-engineer`, `verifier-engineer`, `domain-mechanical`, `domain-electrical`, `domain-civil-structural` | Read, Grep, Glob, Edit, Write, Bash |
 | `experiment-runner` | Read, Grep, Glob, Edit, Write, Bash (writes ledger rows; must not change harness code) |
 | `failure-analyst` | Read, Grep, Glob, Write, Bash (writes failure classes to `docs/eval/failure-classes.md`) |
-| `fair-play-reviewer` | Read, Grep, Glob, Bash (no edit tools) |
+| `fair-play-reviewer` | Read, Grep, Glob, Bash, WebFetch (WebFetch for the forum scan; no edit tools) |
 | `writeup-author` | Read, Grep, Glob, Edit, Write, Bash |
 
 Five skills in `.claude/skills/<name>/SKILL.md`:

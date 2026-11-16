@@ -18,7 +18,10 @@ def test_settings_register_every_guard_event() -> None:
     expected = {"PreToolUse": "pre", "PostToolUse": "post", "SessionStart": "start", "Stop": "stop"}
     for event, arg in expected.items():
         commands = [h["command"] for group in hooks[event] for h in group["hooks"]]
-        assert any(c.endswith(f'guard.py" {arg}') for c in commands), event
+        assert any(f'guard.py" {arg}' in c for c in commands), event
+    first = {e: [h["command"] for g in hooks[e] for h in g["hooks"]][0] for e in expected}
+    assert "|| true" not in first["PreToolUse"]  # pre fails closed
+    assert "|| true" in first["Stop"]  # a broken launcher must not trap the session
     pre_matcher = hooks["PreToolUse"][0]["matcher"]
     assert set(pre_matcher.split("|")) >= {"Read", "Write", "Edit", "Grep", "Glob", "Bash"}
 

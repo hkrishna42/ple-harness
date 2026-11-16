@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" post"
+            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" post || true"
           }
         ]
       }
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" start"
+            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" start || true"
           }
         ]
       }
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" stop"
+            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" stop || true"
           }
         ]
       }

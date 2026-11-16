@@ -23,8 +23,10 @@ BODY_FIELDS = ("content", "new_string", "new_source", "command")
 VENDORED = frozenset({"serve.py", "taskbridge.py"})
 
 # ponytail: regexes over paths and command text stop honest mistakes, not a determined agent;
-# an OS or Docker sandbox is the upgrade if that ever matters.
+# an OS or Docker sandbox is the upgrade if that ever matters. Accepted residual risk: a Bash
+# command that cds into the kit and uses relative paths, or recurses from ~/.cache.
 TASK_CACHE = re.compile(r"\.cache/plebench/tasks[^\s'\"]*")
+CACHE_ROOT = re.compile(r"\.cache/plebench/?(?![^\s'\"])")
 VERIFIER = re.compile(r"\bruns/[^\s'\"]*verifier")
 KIT_RUNS = re.compile(r"\bple/runs\b")
 ARTIFACT_WORD = re.compile(r"\bartifacts\b")
@@ -58,6 +60,8 @@ def texts(tool_input: dict[str, Any], fields: tuple[str, ...]) -> list[str]:
 
 
 def task_cache_leak(text: str) -> bool:
+    if CACHE_ROOT.search(text):
+        return True  # the bare cache root: a recursive read would reach tasks/
     for match in TASK_CACHE.finditer(text):
         token = match.group(0)
         if "/tests" in token or "task_cards" in token:
@@ -66,6 +70,27 @@ def task_cache_leak(text: str) -> bool:
             continue
         return True  # the cache or a task root: a recursive read would reach tests/
     return False
+
+
+def kit_dir(root: Path) -> Path:
+    if os.environ.get("PLE_KIT_DIR"):
+        return Path(os.environ["PLE_KIT_DIR"])
+    done = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if done.returncode == 0 and done.stdout.strip():
+        return Path(done.stdout.strip()).parent.parent / "ple"
+    return root.parent / "ple"
+
+
+def reaches_protected(search_path: str, root: Path) -> bool:
+    """True when a Grep/Glob path is, or sits above, the task cache or the kit's runs/."""
+    target = (root / Path(search_path).expanduser()).resolve()
+    protected = (Path.home() / ".cache" / "plebench" / "tasks", kit_dir(root) / "runs")
+    return any(target == p.resolve() or target in p.resolve().parents for p in protected)
 
 
 def looks_like_key(text: str) -> bool:
@@ -85,6 +110,9 @@ def deny_reason(payload: dict[str, Any]) -> str | None:
     root = project_root(payload)
 
     if payload.get("agent_type") not in ANALYSTS:
+        search = tool_input.get("path")
+        if tool in ("Grep", "Glob") and search and reaches_protected(str(search), root):
+            return "grader firewall: this search would recurse into grader files or runs/."
         for text in paths:
             if task_cache_leak(text) or VERIFIER.search(text) or KIT_RUNS.search(text):
                 return (
@@ -95,7 +123,8 @@ def deny_reason(payload: dict[str, Any]) -> str | None:
 
     if tool in WRITE_TOOLS:
         target = tool_input.get("file_path") or tool_input.get("notebook_path") or ""
-        if target and (root / "artifacts") in (root / str(target)).resolve().parents:
+        parents = (root / str(target)).resolve().parents if target else ()
+        if any(p.name == "artifacts" and (p.parent / "submission.yaml").exists() for p in parents):
             return "artifacts/ is exported by eval/run.py and never edited by hand."
     if tool == "Bash":
         command = str(tool_input.get("command", ""))
@@ -145,8 +174,17 @@ def git_state(root: Path) -> tuple[str, str]:
         )
         return done.stdout
 
-    status = hashlib.sha256(git("status", "--porcelain").encode()).hexdigest()
-    return git("rev-parse", "HEAD").strip(), status
+    digest = hashlib.sha256()
+    digest.update(git("status", "--porcelain", "-uall").encode())
+    digest.update(git("diff", "HEAD", "--binary").encode())
+    for rel in sorted(git("ls-files", "--others", "--exclude-standard", "-z").split("\0")):
+        try:
+            data = (root / rel).read_bytes() if rel else None
+        except OSError:
+            continue
+        if data is not None:
+            digest.update(rel.encode() + b"\0" + data)
+    return git("rev-parse", "HEAD").strip(), digest.hexdigest()
 
 
 def state_file(root: Path, session_id: str) -> Path:
@@ -174,12 +212,22 @@ def stop(payload: dict[str, Any]) -> dict[str, Any] | None:
     began = json.loads(path.read_text())
     if git_state(root) == (began["head"], began["status"]):
         return None
+    checks: tuple[tuple[str, str], ...] = (
+        (".claude/state/tests-ran", "run `make check` until it passes"),
+        ("docs/handover/LATEST.md", "write docs/handover/LATEST.md (skill ple-handover)"),
+    )
+    if payload.get("stop_hook_active"):
+        # Already blocked once: only the handover is required, so a failing `make check` cannot
+        # trap the session. The handover must record that result.
+        checks = checks[1:]
+        tests = root / ".claude/state/tests-ran"
+        if not tests.exists() or tests.stat().st_mtime <= began["start"]:
+            print(
+                "ple guard: stopping with a stale .claude/state/tests-ran marker", file=sys.stderr
+            )
     missing = [
         why
-        for rel, why in (
-            (".claude/state/tests-ran", "run `make check` until it passes"),
-            ("docs/handover/LATEST.md", "write docs/handover/LATEST.md (skill ple-handover)"),
-        )
+        for rel, why in checks
         if not (root / rel).exists() or (root / rel).stat().st_mtime <= began["start"]
     ]
     if not missing:
@@ -200,9 +248,11 @@ def main(event: str) -> int:
             result = pre(payload)
         elif event == "stop":
             result = stop(payload)
-        else:
+        elif event in ("post", "start"):
             (post if event == "post" else start)(payload)
             result = None
+        else:
+            raise ValueError(f"unknown event {event!r}")
     except Exception as exc:  # every failure needs a decided outcome
         if event == "pre":
             result = {
