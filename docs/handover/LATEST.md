@@ -1,10 +1,11 @@
 # Handover: 2026-11-16
 
 - Phase: 0a accepted by Hari on 2026-11-16. The worktrees wait on gate decisions 1-3 below.
-- Branch and HEAD: `main`; `phase-0a` merged and deleted. `main` up to `b2d6ef5` is pushed to
-  <https://github.com/hkrishna42/ple-harness> (public). Plain `git push` works (keychain
-  credential); `gh`'s fine-grained token still gets a 403 on git push.
-- Session goal: Task 8 of `docs/superpowers/plans/2026-11-16-phase-0a.md`, the acceptance checks.
+- Branch and HEAD: `main`; `phase-0a` merged and deleted. `main` up to `67096f2` is pushed to
+  <https://github.com/hkrishna42/ple-harness> (public). `git push` uses the keychain
+  credential. `gh` is now logged in through the browser (keyring) with push rights on the repo.
+- Session goal: Task 8 of `docs/superpowers/plans/2026-11-16-phase-0a.md`, the acceptance checks;
+  then the public GitHub repository and turning off Claude attribution.
 
 ## What changed
 
@@ -16,6 +17,8 @@
 - `c2a8d12` build(agents): nine build agents. `2600038` build(skills): five skills, templates.
 - `ef46942` ci: `make check` on push and pull request. `56df1a4` build(hooks): final-review fixes.
 - `334056f` test, `f894158` docs(notice): this session's review fixes (see below).
+- `67096f2` build: `.claude/settings.json` sets `attribution` to empty strings and `CLAUDE.md`
+  (Style) says commits and PRs carry no Claude trailer or "Generated with" line.
 
 ## Acceptance evidence (this session)
 
@@ -37,11 +40,11 @@
 
 ## make check
 
-Result: pass at `f894158`. 70 passed; ruff, format and mypy clean; `kit validate` printed
+Result: pass at `67096f2` plus this handover. 70 passed; ruff, format and mypy clean; `kit validate` printed
 "ok: ple-harness, google-cloud/claude-opus-5-5 (Claude Opus 5.5); egress none".
 CI: the first GitHub Actions run on `b2d6ef5` is green (run 43893256890: 70 passed, kit cloned
 from Actions, `kit validate` ok). It warns that `actions/checkout@v4` and `setup-uv@v6` target
-the deprecated Node 20; bump them when convenient.
+the deprecated Node 20; bump them when convenient. CI on `67096f2` is green too (run 43894237757).
 
 ## Ledger rows added
 
@@ -49,8 +52,10 @@ none.
 
 ## Decisions and ADRs
 
-none. Phase 0a decisions are in `docs/superpowers/specs/2026-11-16-phase-0a-design.md`;
-ADR-0001 is a Phase 1 item.
+Phase 0a decisions are in `docs/superpowers/specs/2026-11-16-phase-0a-design.md`;
+ADR-0001 is a Phase 1 item. Hari, 2026-11-16: contributions are his alone, so no Claude
+attribution from `67096f2` on; the 15 earlier commits keep their `Co-Authored-By` trailer (no
+history rewrite), so Claude stays in GitHub's contributor list. The plan's trailer lines are void.
 
 ## Blockers (who must act)
 
