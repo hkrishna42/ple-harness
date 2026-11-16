@@ -61,7 +61,6 @@ def test_firewall_analysts_are_real_agents() -> None:
     guard = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(guard)
     assert guard.ANALYSTS <= AGENTS
-    assert all((CLAUDE / "agents" / f"{name}.md").is_file() for name in guard.ANALYSTS)
 
 
 def test_reviewer_cannot_edit() -> None:

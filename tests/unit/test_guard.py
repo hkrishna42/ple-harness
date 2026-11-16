@@ -290,7 +290,10 @@ def test_second_stop_warns_about_stale_tests(repo: Path) -> None:
         input=json.dumps({"session_id": "s1", "stop_hook_active": True}),
         capture_output=True,
         text=True,
-        env={**os.environ, "CLAUDE_PROJECT_DIR": str(repo)},
+        env={
+            **{k: v for k, v in os.environ.items() if k != "PLE_STOP_GATE"},
+            "CLAUDE_PROJECT_DIR": str(repo),
+        },
         check=True,
     )
     assert done.stdout.strip() == "" and "tests-ran" in done.stderr
