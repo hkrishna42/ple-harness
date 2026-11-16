@@ -64,3 +64,26 @@ def test_firewall_analysts_are_real_agents() -> None:
 def test_reviewer_cannot_edit() -> None:
     tools = frontmatter(CLAUDE / "agents" / "fair-play-reviewer.md")["tools"]
     assert "Edit" not in tools and "Write" not in tools
+
+
+SKILLS = {
+    "ple-handover",
+    "ple-experiment-ledger",
+    "ple-fair-play-review",
+    "ple-kit-checks",
+    "ple-runtime-skill-authoring",
+}
+
+
+def test_skills_have_matching_frontmatter() -> None:
+    dirs = {p.parent.name: p for p in (CLAUDE / "skills").glob("*/SKILL.md")}
+    assert set(dirs) == SKILLS
+    for name, path in dirs.items():
+        meta = frontmatter(path)
+        assert meta["name"] == name
+        assert meta["description"].startswith("Use ")
+
+
+def test_templates_exist() -> None:
+    assert (ROOT / "docs" / "handover" / "TEMPLATE.md").is_file()
+    assert (ROOT / "docs" / "adr" / "0000-template.md").is_file()
