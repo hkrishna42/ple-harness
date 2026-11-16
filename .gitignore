@@ -1,0 +1,15 @@
+# From the kit's sample entries: env files with keys, caches, run output
+*.env
+.venv/
+__pycache__/
+*.pyc
+runs/
+
+# ple-harness build-time state
+.worktrees/
+.claude/state/
+.claude/settings.local.json
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
