@@ -1,7 +1,9 @@
 # Handover: 2026-11-16
 
 - Phase: 0a accepted by Hari on 2026-11-16. The worktrees wait on gate decisions 1-3 below.
-- Branch and HEAD: `main` fast-forwarded to this commit; `phase-0a` merged and deleted. Not pushed.
+- Branch and HEAD: `main`; `phase-0a` merged and deleted. `main` up to `b2d6ef5` is pushed to
+  <https://github.com/hkrishna42/ple-harness> (public). Plain `git push` works (keychain
+  credential); `gh`'s fine-grained token still gets a 403 on git push.
 - Session goal: Task 8 of `docs/superpowers/plans/2026-11-16-phase-0a.md`, the acceptance checks.
 
 ## What changed
@@ -37,6 +39,9 @@
 
 Result: pass at `f894158`. 70 passed; ruff, format and mypy clean; `kit validate` printed
 "ok: ple-harness, google-cloud/claude-opus-5-5 (Claude Opus 5.5); egress none".
+CI: the first GitHub Actions run on `b2d6ef5` is green (run 43893256890: 70 passed, kit cloned
+from Actions, `kit validate` ok). It warns that `actions/checkout@v4` and `setup-uv@v6` target
+the deprecated Node 20; bump them when convenient.
 
 ## Ledger rows added
 
@@ -53,9 +58,7 @@ ADR-0001 is a Phase 1 item.
 - Hari: open the x86 VM account with an SSH key and a spend limit.
 - Hari: set up model access for `kit check`: a Google Cloud project for `kit/model_proxy`, or
   a capped Anthropic key in an env file outside the repo.
-- Hari: create the private GitHub repository and install the `ple-submission` app.
 - Hari: export `HF_TOKEN` or keep the cached `hf` login (already works).
-- CI, including the kit clone from Actions, is unverified until the GitHub repository exists.
 
 ## Open decisions for Hari (settle 1-3 before the worktrees)
 
@@ -88,3 +91,6 @@ accepts Phase 0a" section says (`main` is already fast-forwarded), and start Pha
 - `fair-play-reviewer` has WebFetch for the forum scan (spec 5). Build time only.
 - The secrets rule follows the kit's `KEY_RE` (spec 4.1), so a token without a known prefix passes.
 - The live firewall and Stop gate checks behaved as the plan expected.
+- The GitHub repository is public from the start (Hari's call, 2026-11-16), not private until
+  the close (2.1, 9), so the `ple-submission` app is not needed. History was scanned for
+  key-like text before the first push: 0 hits in 55 blobs.
