@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Write|Edit|MultiEdit|NotebookEdit|Grep|Glob|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" pre"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" post"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" start"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --no-project --quiet --python 3.12 python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" stop"
+          }
+        ]
+      }
+    ]
+  }
+}
