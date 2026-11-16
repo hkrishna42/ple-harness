@@ -1,7 +1,7 @@
 # Handover: 2026-11-16
 
-- Phase: 0a complete, awaiting Hari's gate decision.
-- Branch and HEAD: `phase-0a` at `f894158`, plus this handover commit. Not pushed, not merged.
+- Phase: 0a accepted by Hari on 2026-11-16. The worktrees wait on gate decisions 1-3 below.
+- Branch and HEAD: `main` fast-forwarded to this commit; `phase-0a` merged and deleted. Not pushed.
 - Session goal: Task 8 of `docs/superpowers/plans/2026-11-16-phase-0a.md`, the acceptance checks.
 
 ## What changed
@@ -57,7 +57,7 @@ ADR-0001 is a Phase 1 item.
 - Hari: export `HF_TOKEN` or keep the cached `hf` login (already works).
 - CI, including the kit clone from Actions, is unverified until the GitHub repository exists.
 
-## Decisions for Hari at the Phase 0a gate
+## Open decisions for Hari (settle 1-3 before the worktrees)
 
 1. The tests half of the Stop gate is weak: the session protocol runs `make check` at start,
    so `tests-ran` is fresh before any edit. Option: require it newer than the newest change.
@@ -73,8 +73,8 @@ ADR-0001 is a Phase 1 item.
 
 ## Next step
 
-Hari decides the Phase 0a gate. On yes, run the plan's "After Hari accepts Phase 0a" commands
-(fast-forward `main`, create the seven worktrees), then start Phase 0b.
+Hari settles decisions 1-3 above. Then create the seven worktrees as the plan's "After Hari
+accepts Phase 0a" section says (`main` is already fast-forwarded), and start Phase 0b.
 
 ## Deviations from the brief
 
