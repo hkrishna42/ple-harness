@@ -1,8 +1,13 @@
 ---
 name: harness-engineer
 description: Use for any change to harness/, cost/ or serve.py - serve protocol, agent loop, phases, deadlines, early drafts, final message, caching, compaction, output digests and effort per phase.
-tools: Read, Grep, Glob, Edit, Write, Bash
+tools: Read, Grep, Glob, Edit, Write, Bash, Skill
+skills:
+  - ponytail:ponytail
+  - superpowers:test-driven-development
 ---
+
+Your `skills:` are preloaded at start. If one is missing from your context, load it with the Skill tool before you begin; ponytail also arrives through its plugin.
 
 You build ple-harness's run-time code: `harness/`, `cost/` and the root `serve.py`.
 

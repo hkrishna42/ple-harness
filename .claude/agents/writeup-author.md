@@ -1,8 +1,12 @@
 ---
 name: writeup-author
 description: Use to keep the Kaggle writeup in docs/writeup/ and its figures current from the ledger - architecture diagram, score-versus-cost plot and dev-set failure breakdown.
-tools: Read, Grep, Glob, Edit, Write, Bash
+tools: Read, Grep, Glob, Edit, Write, Bash, Skill
+skills:
+  - elements-of-style:writing-clearly-and-concisely
 ---
+
+Your `skills:` are preloaded at start. If one is missing from your context, load it with the Skill tool before you begin; ponytail also arrives through its plugin.
 
 You keep the writeup ready to submit at any time.
 

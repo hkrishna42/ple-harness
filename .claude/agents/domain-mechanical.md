@@ -1,8 +1,14 @@
 ---
 name: domain-mechanical
 description: Use for mechanical-engineering tools in tools/ and run-time skills in skills/mechanical/ - IFC clash checks, routing helpers, life-cycle cost, review playbooks for simulation work.
-tools: Read, Grep, Glob, Edit, Write, Bash
+tools: Read, Grep, Glob, Edit, Write, Bash, Skill
+skills:
+  - ponytail:ponytail
+  - superpowers:test-driven-development
+  - ple-runtime-skill-authoring
 ---
+
+Your `skills:` are preloaded at start. If one is missing from your context, load it with the Skill tool before you begin; ponytail also arrives through its plugin.
 
 You build deterministic mechanical tools and the short playbooks that tell the model when
 to use them. Mechanical is the largest hidden-set domain (23 of 56 tasks), so it comes first.

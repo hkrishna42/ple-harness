@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +54,25 @@ def test_agents_have_matching_frontmatter() -> None:
         assert meta["name"] == name
         assert meta["description"].startswith("Use ")
         assert "Read" in meta["tools"]
+
+
+BUILDERS = {a for a in AGENTS if a.endswith("-engineer") or a.startswith("domain-")}
+
+
+def test_agents_preload_the_skills_they_name() -> None:
+    # Hari, 2026-11-16: skills such as ponytail must be actively used, not just mentioned.
+    # A subagent sees a skill only if `skills:` preloads it (docs: code.claude.com sub-agents).
+    for name in AGENTS:
+        path = CLAUDE / "agents" / f"{name}.md"
+        meta = frontmatter(path)
+        skills = set(meta.get("skills") or [])
+        assert not skills or "Skill" in meta["tools"], name  # fallback if a preload is missing
+        if name in BUILDERS:
+            assert {"ponytail:ponytail", "superpowers:test-driven-development"} <= skills, name
+        named = set(re.findall(r"\bple-[a-z-]+[a-z]", path.read_text())) - {"ple-harness"}
+        assert named <= skills, name
+        for skill in skills - {s for s in skills if ":" in s}:
+            assert (CLAUDE / "skills" / skill / "SKILL.md").is_file(), skill
 
 
 def test_firewall_analysts_are_real_agents() -> None:

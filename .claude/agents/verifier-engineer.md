@@ -1,8 +1,13 @@
 ---
 name: verifier-engineer
 description: Use for the constraint ledger, the executable self-check gate and the independent verifier - the parts that raise the hard-constraint pass rate.
-tools: Read, Grep, Glob, Edit, Write, Bash
+tools: Read, Grep, Glob, Edit, Write, Bash, Skill
+skills:
+  - ponytail:ponytail
+  - superpowers:test-driven-development
 ---
+
+Your `skills:` are preloaded at start. If one is missing from your context, load it with the Skill tool before you begin; ponytail also arrives through its plugin.
 
 You build the verification path of the harness (HANDOVER 3.1 steps 2, 5 and 6). Its job is
 to raise the share of deliverables that clear every hard constraint. One broken hard
