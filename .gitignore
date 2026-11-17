@@ -1,7 +1,6 @@
 # From the kit's sample entries: env files with keys, caches, run output
 *.env
-.env.local
-.envrc
+.env*
 .venv/
 __pycache__/
 *.pyc

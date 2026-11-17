@@ -199,7 +199,7 @@ Checks run in this order:
    nothing and may stop.
 4. Otherwise it needs `.claude/state/tests-ran` (written by `make check` on success) to be
    newer than both the start time and the newest file changed since the start commit
-   (handover files excluded), and the branch's handover to be newer than the start time:
+   (handover files and `docs/decisions.md` excluded), and the branch's handover to be newer than the start time:
    `docs/handover/<name>.md` on `ws/<name>`, `docs/handover/LATEST.md` elsewhere. If
    either is missing or stale, the hook returns `{"decision": "block", "reason": ...}`
    naming what to do. (Amended by ADR-0002 after the Phase 0a gate.)

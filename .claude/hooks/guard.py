@@ -216,14 +216,18 @@ def handover_file(root: Path) -> str:
 
 
 def last_edit(root: Path, head: str) -> float:
-    # Newest mtime among files changed since the session's start commit, handovers excluded, so
-    # `make check` must run after the last edit. ponytail: deletions carry no mtime and are missed.
+    # Newest mtime among files changed since the session's start commit, so `make check` must run
+    # after the last edit. The end-of-session paperwork (handovers, decision log) is excluded.
+    # ponytail: deletions carry no mtime and are missed.
     names = git_out(root, "diff", "--name-only", head).splitlines()
     names += git_out(root, "ls-files", "--others", "--exclude-standard").splitlines()
     times = [
         (root / n).stat().st_mtime
         for n in names
-        if n and not n.startswith("docs/handover/") and (root / n).is_file()
+        if n
+        and not n.startswith("docs/handover/")
+        and n != "docs/decisions.md"
+        and (root / n).is_file()
     ]
     return max(times, default=0.0)
 

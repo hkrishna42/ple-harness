@@ -14,8 +14,8 @@ asked that skills such as ponytail be actively used, and that every decision be 
 ## Decision
 
 1. The Stop gate needs `.claude/state/tests-ran` to be newer than the newest file changed
-   since the session's start commit (handover files excluded), so `make check` must run after
-   the last edit.
+   since the session's start commit (handover files and `docs/decisions.md` excluded), so
+   `make check` must run after the last edit.
 2. Each workstream session opens in its worktree folder (`.worktrees/<name>`), never in the
    main checkout. The main checkout is the lead's, for merges into `main`.
 3. Each workstream writes its own handover, `docs/handover/<name>.md`, on `ws/<name>`. The

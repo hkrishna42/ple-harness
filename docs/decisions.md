@@ -17,7 +17,7 @@ Every session adds its decisions the same day. Architectural ones also get an AD
 - 2026-11-16 · Hari · Accept Phase 0a and fast-forward `main`. Ref: `b2d6ef5`.
 - 2026-11-16 · Hari · The GitHub repository is public from the start, so the `ple-submission` app is not needed. Ref: <https://github.com/hkrishna42/ple-harness>.
 - 2026-11-16 · Hari · No Claude attribution on commits or pull requests. Ref: `67096f2`.
-- 2026-11-16 · Hari · Dev-run model key: ComplyChip's `ANTHROPIC_API_KEY`, copied to `~/.config/ple-harness/dev.env` (owner-only, outside the repo). A spend cap is still to be set. Ref: this log.
+- 2026-11-16 · Hari · Dev runs use an existing Anthropic key, kept in `~/.config/ple-harness/dev.env` (owner-only, outside the repo). Ref: brief section 2.5.
 - 2026-11-16 · Hari · Run VM on vast.ai through the existing `vastai` login (VM template, as the brief's budget table says). Ref: `HANDOVER.md` section 6.
 - 2026-11-16 · Hari · The Stop gate needs `make check` after the last edit, not just after the session start. Ref: ADR-0002.
 - 2026-11-16 · Hari · Each workstream session opens in its own worktree folder. Ref: ADR-0002, `CLAUDE.md`.
@@ -25,4 +25,5 @@ Every session adds its decisions the same day. Architectural ones also get an AD
 - 2026-11-16 · Hari · Skills such as ponytail must be actively used: builder agents preload ponytail and test-driven development, enforced by a config test; ponytail-review on every merge. Ref: ADR-0002.
 - 2026-11-16 · Hari · Keep this decision log. Ref: ADR-0002.
 - 2026-11-16 · Claude, unopposed · Accept `pathspec` (MPL-2.0) as a dev-only dependency. Ref: ADR-0001.
-- 2026-11-16 · Claude, unopposed · Ignore `.env.local` and `.envrc`; move CI to `actions/checkout@v7` and `astral-sh/setup-uv@v10` (Node 24). Why: CI's Node 20 deprecation warning.
+- 2026-11-16 · Claude, unopposed · Ignore every `.env*` file; move CI to `actions/checkout@v7` and `astral-sh/setup-uv@v10.3.3` (Node 24; setup-uv has no `v10` tag). Why: CI's Node 20 deprecation warning; the fair-play review.
+- 2026-11-16 · Claude (ruling) · The Stop gate's last-edit check skips `docs/decisions.md` as well as handovers. Why: logging decisions after `make check` must not force a rerun (fair-play review).

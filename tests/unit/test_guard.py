@@ -273,11 +273,13 @@ def test_committed_edit_after_tests_blocks(repo: Path) -> None:
     assert out is not None and "make check" in out["reason"]
 
 
-def test_handover_written_after_tests_is_not_a_change(repo: Path) -> None:
+def test_handover_and_decision_log_after_tests_are_not_changes(repo: Path) -> None:
     (repo / "new.py").write_text("x = 1\n")
     (repo / ".claude" / "state" / "tests-ran").touch()
     (repo / "docs" / "handover" / "LATEST.md").write_text("new\n")
+    (repo / "docs" / "decisions.md").write_text("- a decision\n")  # ple-handover step 5
     later(repo / "docs" / "handover" / "LATEST.md")
+    later(repo / "docs" / "decisions.md")
     assert stop(repo) is None
 
 
