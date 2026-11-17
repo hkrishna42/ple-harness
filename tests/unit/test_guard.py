@@ -230,6 +230,18 @@ def stop(root: Path, **env: str) -> dict[str, Any] | None:
     return run("stop", {"session_id": "s1", "stop_hook_active": False}, root, **env)
 
 
+def later(path: Path, seconds: float = 5) -> None:
+    t = time.time() + seconds
+    os.utime(path, (t, t))
+
+
+def ran_tests(root: Path) -> None:
+    # `make check` after the edits. Set the time explicitly: Linux CI stamps writes within one
+    # clock tick with the same mtime, so an edit and the marker could otherwise tie.
+    (root / ".claude" / "state" / "tests-ran").touch()
+    later(root / ".claude" / "state" / "tests-ran", 1)
+
+
 def test_unchanged_session_may_stop(repo: Path) -> None:
     assert stop(repo) is None
 
@@ -243,14 +255,9 @@ def test_changed_session_without_handover_is_blocked(repo: Path) -> None:
 
 def test_changed_session_with_tests_and_handover_may_stop(repo: Path) -> None:
     (repo / "new.py").write_text("x = 1\n")
-    (repo / ".claude" / "state" / "tests-ran").touch()
+    ran_tests(repo)
     (repo / "docs" / "handover" / "LATEST.md").write_text("new\n")
     assert stop(repo) is None
-
-
-def later(path: Path, seconds: float = 5) -> None:
-    t = time.time() + seconds
-    os.utime(path, (t, t))
 
 
 def test_tests_older_than_the_last_edit_block(repo: Path) -> None:
@@ -275,7 +282,7 @@ def test_committed_edit_after_tests_blocks(repo: Path) -> None:
 
 def test_handover_and_decision_log_after_tests_are_not_changes(repo: Path) -> None:
     (repo / "new.py").write_text("x = 1\n")
-    (repo / ".claude" / "state" / "tests-ran").touch()
+    ran_tests(repo)
     (repo / "docs" / "handover" / "LATEST.md").write_text("new\n")
     (repo / "docs" / "decisions.md").write_text("- a decision\n")  # ple-handover step 5
     later(repo / "docs" / "handover" / "LATEST.md")
@@ -286,7 +293,7 @@ def test_handover_and_decision_log_after_tests_are_not_changes(repo: Path) -> No
 def test_workstream_branch_needs_its_own_handover(repo: Path) -> None:
     git(repo, "switch", "-q", "-c", "ws/cost")
     (repo / "new.py").write_text("x = 1\n")
-    (repo / ".claude" / "state" / "tests-ran").touch()
+    ran_tests(repo)
     (repo / "docs" / "handover" / "LATEST.md").write_text("new\n")
     out = stop(repo)
     assert out is not None and "docs/handover/cost.md" in out["reason"]
