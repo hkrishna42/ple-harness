@@ -248,6 +248,50 @@ def test_changed_session_with_tests_and_handover_may_stop(repo: Path) -> None:
     assert stop(repo) is None
 
 
+def later(path: Path, seconds: float = 5) -> None:
+    t = time.time() + seconds
+    os.utime(path, (t, t))
+
+
+def test_tests_older_than_the_last_edit_block(repo: Path) -> None:
+    (repo / ".claude" / "state" / "tests-ran").touch()  # e.g. `make check` at session start
+    (repo / "new.py").write_text("x = 1\n")
+    later(repo / "new.py")
+    (repo / "docs" / "handover" / "LATEST.md").write_text("new\n")
+    out = stop(repo)
+    assert out is not None and "make check" in out["reason"] and "LATEST.md" not in out["reason"]
+
+
+def test_committed_edit_after_tests_blocks(repo: Path) -> None:
+    (repo / ".claude" / "state" / "tests-ran").touch()
+    (repo / "new.py").write_text("x = 1\n")
+    later(repo / "new.py")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "edit")
+    (repo / "docs" / "handover" / "LATEST.md").write_text("new\n")
+    out = stop(repo)
+    assert out is not None and "make check" in out["reason"]
+
+
+def test_handover_written_after_tests_is_not_a_change(repo: Path) -> None:
+    (repo / "new.py").write_text("x = 1\n")
+    (repo / ".claude" / "state" / "tests-ran").touch()
+    (repo / "docs" / "handover" / "LATEST.md").write_text("new\n")
+    later(repo / "docs" / "handover" / "LATEST.md")
+    assert stop(repo) is None
+
+
+def test_workstream_branch_needs_its_own_handover(repo: Path) -> None:
+    git(repo, "switch", "-q", "-c", "ws/cost")
+    (repo / "new.py").write_text("x = 1\n")
+    (repo / ".claude" / "state" / "tests-ran").touch()
+    (repo / "docs" / "handover" / "LATEST.md").write_text("new\n")
+    out = stop(repo)
+    assert out is not None and "docs/handover/cost.md" in out["reason"]
+    (repo / "docs" / "handover" / "cost.md").write_text("new\n")
+    assert stop(repo) is None
+
+
 def test_compact_keeps_start_time(repo: Path) -> None:
     (repo / "new.py").write_text("x = 1\n")
     run("start", {"session_id": "s1", "source": "compact"}, repo)

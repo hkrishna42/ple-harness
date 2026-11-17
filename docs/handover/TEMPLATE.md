@@ -18,7 +18,11 @@ none, or run IDs.
 
 ## Decisions and ADRs
 
-none, or `docs/adr/NNNN-title.md`.
+none, or the lines this session added to `docs/decisions.md`, and any `docs/adr/NNNN-title.md`.
+
+## Reviews
+
+none, or for each merge: the `ponytail:ponytail-review` result and the fair-play sign-off.
 
 ## Blockers (who must act)
 

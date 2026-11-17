@@ -197,14 +197,16 @@ Checks run in this order:
 2. If no session file exists, the session may stop, with a warning on stderr.
 3. If `HEAD` and the fingerprint both equal their start values, the session changed
    nothing and may stop.
-4. Otherwise it needs both of these to be newer than the start time:
-   `.claude/state/tests-ran` (written by `make check` on success) and
-   `docs/handover/LATEST.md`. If either is missing or stale, the hook returns
-   `{"decision": "block", "reason": ...}` naming what to do.
+4. Otherwise it needs `.claude/state/tests-ran` (written by `make check` on success) to be
+   newer than both the start time and the newest file changed since the start commit
+   (handover files excluded), and the branch's handover to be newer than the start time:
+   `docs/handover/<name>.md` on `ws/<name>`, `docs/handover/LATEST.md` elsewhere. If
+   either is missing or stale, the hook returns `{"decision": "block", "reason": ...}`
+   naming what to do. (Amended by ADR-0002 after the Phase 0a gate.)
 5. When the Stop payload has `stop_hook_active: true` (the agent was already blocked
-   once), only a fresh `LATEST.md` is required. If it is fresh but `tests-ran` is stale,
+   once), only a fresh handover is required. If it is fresh but `tests-ran` is stale,
    the session may stop, with a warning on stderr naming the stale marker; a stale
-   `LATEST.md` still blocks. The handover must record the `make check` result, so a
+   handover still blocks. The handover must record the `make check` result, so a
    failing check never traps the session.
 6. An exception anywhere in the Stop handler lets the session stop, with a warning on
    stderr. A gate bug must never trap a finished session.

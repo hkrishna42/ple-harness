@@ -23,6 +23,9 @@ kit:
 kit-check: kit
 	cd $(KIT) && uv run python -m kit check $(CURDIR) $(ARGS)
 
+# ADR-0002: ws/<name> writes docs/handover/<name>.md; main writes LATEST.md
+HANDOVER = docs/handover/$(or $(patsubst ws/%,%,$(filter ws/%,$(shell git branch --show-current))),LATEST).md
+
 handover:
-	cp docs/handover/TEMPLATE.md docs/handover/LATEST.md
-	@echo "Now fill in docs/handover/LATEST.md (skill ple-handover)."
+	cp docs/handover/TEMPLATE.md $(HANDOVER)
+	@echo "Now fill in $(HANDOVER) (skill ple-handover)."

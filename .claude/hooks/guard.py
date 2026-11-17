@@ -167,24 +167,27 @@ def post(payload: dict[str, Any]) -> None:
     )
 
 
-def git_state(root: Path) -> tuple[str, str]:
-    def git(*args: str) -> str:
-        done = subprocess.run(
-            ["git", "-C", str(root), *args], check=False, capture_output=True, text=True
-        )
-        return done.stdout
+def git_out(root: Path, *args: str) -> str:
+    done = subprocess.run(
+        ["git", "-C", str(root), *args], check=False, capture_output=True, text=True
+    )
+    return done.stdout
 
+
+def git_state(root: Path) -> tuple[str, str]:
     digest = hashlib.sha256()
-    digest.update(git("status", "--porcelain", "-uall").encode())
-    digest.update(git("diff", "HEAD", "--binary").encode())
-    for rel in sorted(git("ls-files", "--others", "--exclude-standard", "-z").split("\0")):
+    digest.update(git_out(root, "status", "--porcelain", "-uall").encode())
+    digest.update(git_out(root, "diff", "HEAD", "--binary").encode())
+    for rel in sorted(
+        git_out(root, "ls-files", "--others", "--exclude-standard", "-z").split("\0")
+    ):
         try:
             data = (root / rel).read_bytes() if rel else None
         except OSError:
             continue
         if data is not None:
             digest.update(rel.encode() + b"\0" + data)
-    return git("rev-parse", "HEAD").strip(), digest.hexdigest()
+    return git_out(root, "rev-parse", "HEAD").strip(), digest.hexdigest()
 
 
 def state_file(root: Path, session_id: str) -> Path:
@@ -201,6 +204,30 @@ def start(payload: dict[str, Any]) -> None:
     path.write_text(json.dumps({"start": time.time(), "head": head, "status": status}))
 
 
+def newer(path: Path, than: float) -> bool:
+    return path.exists() and path.stat().st_mtime > than
+
+
+def handover_file(root: Path) -> str:
+    # ADR-0002: a workstream branch ws/<name> writes docs/handover/<name>.md; main writes LATEST.md
+    branch = git_out(root, "branch", "--show-current").strip()
+    name = branch.removeprefix("ws/") if branch.startswith("ws/") else "LATEST"
+    return f"docs/handover/{name}.md"
+
+
+def last_edit(root: Path, began: dict[str, Any]) -> float:
+    # Newest mtime among files changed since the session's start commit, handovers excluded, so
+    # `make check` must run after the last edit. ponytail: deletions carry no mtime and are missed.
+    names = git_out(root, "diff", "--name-only", began["head"]).splitlines()
+    names += git_out(root, "ls-files", "--others", "--exclude-standard").splitlines()
+    times = [
+        (root / n).stat().st_mtime
+        for n in names
+        if n and not n.startswith("docs/handover/") and (root / n).is_file()
+    ]
+    return max(times, default=0.0)
+
+
 def stop(payload: dict[str, Any]) -> dict[str, Any] | None:
     if os.environ.get("PLE_STOP_GATE") == "off":
         return None
@@ -212,24 +239,19 @@ def stop(payload: dict[str, Any]) -> dict[str, Any] | None:
     began = json.loads(path.read_text())
     if git_state(root) == (began["head"], began["status"]):
         return None
-    checks: tuple[tuple[str, str], ...] = (
-        (".claude/state/tests-ran", "run `make check` until it passes"),
-        ("docs/handover/LATEST.md", "write docs/handover/LATEST.md (skill ple-handover)"),
-    )
-    if payload.get("stop_hook_active"):
-        # Already blocked once: only the handover is required, so a failing `make check` cannot
-        # trap the session. The handover must record that result.
-        checks = checks[1:]
-        tests = root / ".claude/state/tests-ran"
-        if not tests.exists() or tests.stat().st_mtime <= began["start"]:
+    missing = []
+    if not newer(root / ".claude/state/tests-ran", max(began["start"], last_edit(root, began))):
+        if payload.get("stop_hook_active"):
+            # Already blocked once: only the handover is required, so a failing `make check`
+            # cannot trap the session. The handover must record that result.
             print(
                 "ple guard: stopping with a stale .claude/state/tests-ran marker", file=sys.stderr
             )
-    missing = [
-        why
-        for rel, why in checks
-        if not (root / rel).exists() or (root / rel).stat().st_mtime <= began["start"]
-    ]
+        else:
+            missing.append("run `make check` until it passes")
+    handover = handover_file(root)
+    if not newer(root / handover, began["start"]):
+        missing.append(f"write {handover} (skill ple-handover)")
     if not missing:
         return None
     return {
