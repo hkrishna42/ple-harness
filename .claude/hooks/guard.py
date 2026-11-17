@@ -215,10 +215,10 @@ def handover_file(root: Path) -> str:
     return f"docs/handover/{name}.md"
 
 
-def last_edit(root: Path, began: dict[str, Any]) -> float:
+def last_edit(root: Path, head: str) -> float:
     # Newest mtime among files changed since the session's start commit, handovers excluded, so
     # `make check` must run after the last edit. ponytail: deletions carry no mtime and are missed.
-    names = git_out(root, "diff", "--name-only", began["head"]).splitlines()
+    names = git_out(root, "diff", "--name-only", head).splitlines()
     names += git_out(root, "ls-files", "--others", "--exclude-standard").splitlines()
     times = [
         (root / n).stat().st_mtime
@@ -240,7 +240,9 @@ def stop(payload: dict[str, Any]) -> dict[str, Any] | None:
     if git_state(root) == (began["head"], began["status"]):
         return None
     missing = []
-    if not newer(root / ".claude/state/tests-ran", max(began["start"], last_edit(root, began))):
+    if not newer(
+        root / ".claude/state/tests-ran", max(began["start"], last_edit(root, began["head"]))
+    ):
         if payload.get("stop_hook_active"):
             # Already blocked once: only the handover is required, so a failing `make check`
             # cannot trap the session. The handover must record that result.

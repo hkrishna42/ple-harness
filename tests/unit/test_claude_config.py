@@ -71,7 +71,7 @@ def test_agents_preload_the_skills_they_name() -> None:
             assert {"ponytail:ponytail", "superpowers:test-driven-development"} <= skills, name
         named = set(re.findall(r"\bple-[a-z-]+[a-z]", path.read_text())) - {"ple-harness"}
         assert named <= skills, name
-        for skill in skills - {s for s in skills if ":" in s}:
+        for skill in {s for s in skills if ":" not in s}:
             assert (CLAUDE / "skills" / skill / "SKILL.md").is_file(), skill
 
 
