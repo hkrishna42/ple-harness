@@ -1,50 +1,32 @@
 # Handover: 2026-11-16
 
-- Phase: 0a accepted by Hari on 2026-11-16. The worktrees wait on gate decisions 1-3 below.
-- Branch and HEAD: `main`; `phase-0a` merged and deleted. `main` up to `67096f2` is pushed to
-  <https://github.com/hkrishna42/ple-harness> (public). `git push` uses the keychain
-  credential. `gh` is now logged in through the browser (keyring) with push rights on the repo.
-- Session goal: Task 8 of `docs/superpowers/plans/2026-11-16-phase-0a.md`, the acceptance checks;
-  then the public GitHub repository and turning off Claude attribution.
+- Phase: 0a accepted. Gate decisions 1-3 settled (ADR-0002); the seven workstream worktrees
+  exist. Phase 0b is next. Hari has joined the competition on Kaggle.
+- Branch and HEAD: `main` at this commit (`gate-decisions` fast-forwarded and deleted). Not
+  pushed: `origin/main` is at `fcd4bc6`. Worktrees: `.worktrees/<name>` on `ws/<name>` for
+  harness, cost, domain-mech, domain-elec, domain-civil-struct, eval and writeup.
+- Session goal: settle the gate decisions, make skills such as ponytail actively used, start the
+  decision log, create the worktrees.
 
 ## What changed
 
-- `73db2f2` docs: Phase 0a design spec and implementation plan.
-- `291cac4` entry: kit `plan-verify` sample, `submission.yaml`, `LICENSE`, `NOTICE`.
-- `3ac86ca` build: uv, ruff, mypy, pytest, `Makefile`, skeleton, fair-play scan.
-- `91269da` build(hooks): `.claude/hooks/guard.py` with subprocess tests.
-- `5f55bdb` build(hooks): `.claude/settings.json` registers the guard for four events.
-- `c2a8d12` build(agents): nine build agents. `2600038` build(skills): five skills, templates.
-- `ef46942` ci: `make check` on push and pull request. `56df1a4` build(hooks): final-review fixes.
-- `334056f` test, `f894158` docs(notice): this session's review fixes (see below).
-- `67096f2` build: `.claude/settings.json` sets `attribution` to empty strings and `CLAUDE.md`
-  (Style) says commits and PRs carry no Claude trailer or "Generated with" line.
-
-## Acceptance evidence (this session)
-
-- Firewall, live: `failure-analyst` reading `~/.cache/plebench/tasks/none/tests/x.txt` got
-  "File does not exist." (allowed). `harness-engineer` got "ple guard: grader firewall: only
-  experiment-runner and failure-analyst may open grader files, task_cards, verifier output or
-  the kit's runs/. Ask for failure classes instead." So the hook's `agent_type` is the agent name.
-- Stop gate, live: after `make handover` with `tests-ran` older than the session start, ending
-  the turn was blocked with "ple stop gate: this session changed files. Before ending: run
-  `make check` until it passes." Only `make check` was named because `LATEST.md` was fresh.
-  The second-stop rule was not run live (it would have ended the session); two subprocess
-  tests cover it.
-- ponytail-review: net -2 lines possible. Dropped one redundant assert; skipped a 1-line shrink
-  in `guard.py`; kept the fair-play test's own `kit_dir`. It also surfaced a real bug, fixed in
-  `334056f`: one Stop test failed whenever `PLE_STOP_GATE=off` was exported.
-- fair-play-reviewer: SIGN-OFF at `334056f`, all ten items yes or not applicable yet (no harness
-  code). Its non-blocking note on `NOTICE` (credit `submission.yaml` to the kit sample) is fixed
-  in `f894158`; its other notes are in the gate decisions below.
+- `6897e33` build(hooks): the Stop gate needs `make check` after the last edit (handovers and
+  `docs/decisions.md` excluded) and the branch's handover: `docs/handover/<name>.md` on `ws/<name>`, `LATEST.md` on
+  `main`. `make handover` picks the same file.
+- `3cc6122` build(agents): builders preload `ponytail:ponytail` and
+  `superpowers:test-driven-development`; every agent preloads the `ple-*` skills its text names
+  and has the Skill tool as a fallback. `tests/unit/test_claude_config.py` enforces it.
+- `48bbc58` ci: `actions/checkout@v7` and setup-uv on Node 24 (pinned to `v10.3.3` in `2c795cd`).
+- `19c4998` docs: `docs/decisions.md`, ADR-0001 (Phase 0a deviations), ADR-0002 (workstream
+  sessions), `CLAUDE.md` session protocol and layout, `merge=union` for the log.
+- `42592c9` build(hooks): ponytail-review shrinks.
+- `2c795cd` fix: setup-uv pinned to `v10.3.3`, `.env*` ignored, the decision log skipped by the
+  last-edit check; the log names only the key's path.
 
 ## make check
 
-Result: pass at `67096f2` plus this handover. 70 passed; ruff, format and mypy clean; `kit validate` printed
-"ok: ple-harness, google-cloud/claude-opus-5-5 (Claude Opus 5.5); egress none".
-CI: the first GitHub Actions run on `b2d6ef5` is green (run 43893256890: 70 passed, kit cloned
-from Actions, `kit validate` ok). It warns that `actions/checkout@v4` and `setup-uv@v6` target
-the deprecated Node 20; bump them when convenient. CI on `67096f2` is green too (run 43894237757).
+Result: pass at `2c795cd`. 75 passed; ruff, format and mypy clean; `kit validate` ok. CI has not
+run on these commits: they are not pushed.
 
 ## Ledger rows added
 
@@ -52,50 +34,38 @@ none.
 
 ## Decisions and ADRs
 
-Phase 0a decisions are in `docs/superpowers/specs/2026-11-16-phase-0a-design.md`;
-ADR-0001 is a Phase 1 item. Hari, 2026-11-16: contributions are his alone, so no Claude
-attribution from `67096f2` on; the 15 earlier commits keep their `Co-Authored-By` trailer (no
-history rewrite), so Claude stays in GitHub's contributor list. The plan's trailer lines are void.
+`docs/decisions.md` now holds 22 lines: Phase 0a backfilled, plus today's. ADR-0001, ADR-0002.
+
+## Reviews
+
+- ponytail-review of `main..gate-decisions`: net -2 lines possible; both shrinks applied in
+  `42592c9`; skipped swapping the extracted `git_out` back to a `functools.partial`.
+- fair-play-reviewer: SIGN-OFF at `2c795cd` (checklist 1-10 pass; the first review blocked on
+  `setup-uv@v10`, which has no such tag, fixed in `2c795cd`).
+
+## Not verified
+
+- Skill preloads in subagents. This session could not reload agent definitions. A probe saw
+  ponytail in a subagent (the ponytail plugin injects it into every subagent at start) but not
+  the newly listed preloads. First workstream session: ask a builder agent, with no tools,
+  which skill texts are in its context. If preloads are missing, the fallback line makes the
+  agent load them with the Skill tool; report it here.
 
 ## Blockers (who must act)
 
-- Hari: join the competition on Kaggle.
-- Hari: open the x86 VM account with an SSH key and a spend limit.
-- Hari: set up model access for `kit check`: a Google Cloud project for `kit/model_proxy`, or
-  a capped Anthropic key in an env file outside the repo.
-- Hari: export `HF_TOKEN` or keep the cached `hf` login (already works).
-
-## Open decisions for Hari (settle 1-3 before the worktrees)
-
-1. The tests half of the Stop gate is weak: the session protocol runs `make check` at start,
-   so `tests-ran` is fresh before any edit. Option: require it newer than the newest change.
-2. Must sessions start inside their worktree? That needs a `CLAUDE.md` line.
-3. One handover file per workstream, or a lead-only `LATEST.md`? Decide before the worktrees.
-4. Parked guard residuals: the glob `~/.cache/plebench/*` is not caught; Grep and Glob without
-   a `path` (cwd) are unchecked; Monitor and terminal MCP tools are not matched; nothing prunes
-   `.claude/state/session-*.json` (background Claude processes here wrote eight in 30 s).
-5. From the fair-play review: accept dev-only `pathspec` (MPL-2.0, a mypy dependency, never
-   shipped); whether the spec's decisions (no root `harness.py`, which `CLAUDE.md`'s layout still
-   lists) need ADRs under "No ADR, no merge"; add `serve.py` and root modules to the fair-play
-   scan once Phase 2 edits them; widen `.gitignore` beyond `*.env` (`.env.local`, `.envrc`).
+- Hari: confirm the spend cap on the dev-run Anthropic key.
+- Hari: vast.ai credit is $12.60; the brief's VM line is $100. Top up before Phase 0b runs.
+- Hari: say when to push `main`.
 
 ## Next step
 
-Hari settles decisions 1-3 above. Then create the seven worktrees as the plan's "After Hari
-accepts Phase 0a" section says (`main` is already fast-forwarded), and start Phase 0b.
+Phase 0b in `.worktrees/eval` (experiment-runner): start a vast.ai VM template, set
+`model_api: anthropic/claude-opus-5-5` on that branch for dev runs, and run
+`make kit-check ARGS="--env-file ~/.config/ple-harness/dev.env"`. State the estimated cost first.
 
 ## Deviations from the brief
 
-- No root `harness.py` (2.1, 3.3): beside `harness/` it makes `import harness` ambiguous.
-- The dataset has no `solution/` folders; the firewall targets `tests/` and `task_cards` (4.4).
-- `lead` has no agent file (4.2): the lead is the main session and follows `CLAUDE.md`.
-- `dev-run` and `replay` are deferred to Phase 0b and Phase 2, with the tools they wrap.
-- Phase 0b needs model proxy access as well as the VM, because `kit check` requires it.
-- Stop hook (4.4): a repeat stop needs only a fresh `LATEST.md`, which records the `make check`
-  result, so a red suite cannot trap a finished session (spec 4.4 rule 5).
-- `fair-play-reviewer` has WebFetch for the forum scan (spec 5). Build time only.
-- The secrets rule follows the kit's `KEY_RE` (spec 4.1), so a token without a known prefix passes.
-- The live firewall and Stop gate checks behaved as the plan expected.
-- The GitHub repository is public from the start (Hari's call, 2026-11-16), not private until
-  the close (2.1, 9), so the `ple-submission` app is not needed. History was scanned for
-  key-like text before the first push: 0 hits in 55 blobs.
+- Phase 0a's deviations are now ADR-0001. New: per-workstream handovers and the stricter tests
+  check (ADR-0002). Dev runs use an Anthropic key instead of the Google Cloud proxy (brief 2.5
+  allows it; switch `model_api` back before any submission candidate).
+- Parked guard gaps and the `serve.py` fair-play scan stay open for Phase 2 (`docs/decisions.md`).
