@@ -11,11 +11,15 @@ the `Makefile` or the hooks are missing, follow `HANDOVER.md` section 0.1 instea
 session protocol below, skip any step whose file does not exist, and say what you skipped.
 
 ## Session protocol (every session once Phase 0a is accepted)
-1. Read `docs/handover/LATEST.md`. Then `git log --oneline -20`. Then `make check`.
-2. Work in the worktree for your workstream (`git worktree list`). Never on `main`, apart
-   from the single bootstrap commit.
-3. Before ending: run tests, write a handover (skill `ple-handover`), update
-   `docs/handover/LATEST.md`. The Stop hook enforces this.
+1. Read `docs/handover/LATEST.md` and, in a worktree, `docs/handover/<workstream>.md`.
+   Then `docs/decisions.md`, `git log --oneline -20` and `make check`.
+2. Open each workstream session in its worktree folder (`.worktrees/<name>`, branch
+   `ws/<name>`; see `git worktree list`), never in the main checkout: the hooks judge the
+   folder a session starts in. The main checkout is the lead's, for merges into `main`.
+3. Log every decision, however small, as one line in `docs/decisions.md` the same day.
+4. Before ending: run `make check` after your last edit, then write your branch's handover
+   (skill `ple-handover`; `make handover` picks `docs/handover/<workstream>.md` on
+   `ws/<name>`, `LATEST.md` on `main`). The Stop hook enforces both (ADR-0002).
 
 ## Hard rules
 - **Fair play.** No task IDs, titles, folder names or file hashes under `harness/`,
@@ -42,8 +46,10 @@ session protocol below, skip any step whose file does not exist, and say what yo
 ## Workflow
 - `superpowers:brainstorm` → `superpowers:write-plan` → `superpowers:execute-plan`.
   Write the failing test first.
-- `ponytail` level `full` in `harness/` and `cost/`; level `lite` in `tools/`.
-  `ponytail:ponytail-review` on every merge.
+- `ponytail` level `full` in `harness/` and `cost/`; level `lite` in `tools/`. Builder
+  agents preload ponytail and test-driven development (`skills:` in `.claude/agents/`,
+  enforced by a config test). The lead runs `ponytail:ponytail-review` on every merge and
+  records the result in the handover.
 - Delegate to the agents in `.claude/agents/`; keep the main context clean.
   `fair-play-reviewer` signs off before any merge.
 - Any architectural choice → ADR in `docs/adr/`. No ADR, no merge.
@@ -51,14 +57,14 @@ session protocol below, skip any step whose file does not exist, and say what yo
 
 ## Layout
 ```
-submission.yaml serve.py harness.py   the entry's required root files
+submission.yaml serve.py   the entry's root files (no root harness.py: ADR-0001)
 harness/     protocol, agent loop, phases, deadlines, final message
 cost/        engine/ policies/ bench/
 skills/      run-time playbooks: core/ mechanical/ electrical/ civil-structural/ style/
 tools/       deterministic domain tools
 tests/       unit/ protocol/ replay/
 artifacts/   dev-set outputs exported by the kit; never edit by hand
-docs/        adr/ handover/ eval/ writeup/
+docs/        adr/ handover/ eval/ writeup/ decisions.md
 .claude/     build-time only: agents/ skills/ hooks
 runs/        git-ignored saved runs for the replay bench
 ```
